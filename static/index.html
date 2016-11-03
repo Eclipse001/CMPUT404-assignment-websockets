@@ -40,7 +40,6 @@ function debug(str) {
     var debugDiv = document.getElementById('debug');
     debugDiv.innerHTML = "" + str;
 }
-debug("Test");
 
 world = {};
 
@@ -124,7 +123,7 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just modified!
+    socket.send(JSON.stringify(world));
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -239,8 +238,7 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'green','radius':10});
 });
 
 
@@ -250,31 +248,35 @@ function update() {
 
 
 function wsSetup() {
-    var url = "ws://"+host+"/subscribe";   
+    var url = "ws://"+host+"/subscribe";
+    alert("before")
     socket = new WebSocket(url);
     socket.onopen = function() {
-        //XXX: TODO What are you going to do here?
+	// socket.send(JSON.stringify(world));
     };
+    alert("after")
+    
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
     };
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            for (var entity in JSON.parse(msg.data)) {
+		world[entity] = JSON.parse(msg.data)[entity];
+	    }
+                        
         } catch (e) {
             alert("socket on message: " + e);
         }
-    }; 
+    };
+    return socket;
 }
 
-wsSetup();
-
-
-
+socket = wsSetup();
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+setInterval(update, 1000/30.0);
 
 
     </script>
