@@ -249,28 +249,25 @@ function update() {
 
 function wsSetup() {
     var url = "ws://"+host+"/subscribe";
-    alert("before")
     socket = new WebSocket(url);
     socket.onopen = function() {
-	// socket.send(JSON.stringify(world));
+	 	  socket.send(JSON.stringify(world));
     };
-    alert("after")
     
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
     };
     socket.onmessage = function(msg) {  
         try {
-            debug("WebSocket Recv:" + msg.data);
             for (var entity in JSON.parse(msg.data)) {
-		world[entity] = JSON.parse(msg.data)[entity];
-	    }
-                        
-        } catch (e) {
-            alert("socket on message: " + e);
-        }
-    };
-    return socket;
+					world[entity] = JSON.parse(msg.data)[entity];
+	    		}
+            drawNextFrame();      
+        		} catch (e) {
+            	alert("socket on message: " + e);
+        		}
+    	  };
+    	  return socket;
 }
 
 socket = wsSetup();

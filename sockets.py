@@ -26,6 +26,18 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+class Timer:
+    def __init__(self):
+        self.start_time = int(round(time.time() * 1000))
+    
+    def reset(self):
+        self.start_time = int(round(time.time() * 1000))
+    
+    def check_ontime(self):
+        if int(round(time.time() * 1000)) - self.start_time <= 100:
+            return True
+        return False
+
 class Client:
     def __init__(self):
         self.queue = queue.Queue()
@@ -73,6 +85,8 @@ myWorld = World()
 
 clients = []
 
+timer=Timer()
+
 def set_listener(entity,data):
     for client in clients:
         client.put(json.dumps({entity:data}))
@@ -109,6 +123,7 @@ def subscribe_socket(ws):
     clients.append(client)
     g = gevent.spawn(read_ws, ws, client)    
     try:
+        ws.send(json.dumps(myWorld.world()))
         while True:
             # block here
             msg = client.get()
@@ -133,6 +148,7 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     myWorld.set(entity,flask_post_json())
+    timer.reset()
     return json.dumps(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
