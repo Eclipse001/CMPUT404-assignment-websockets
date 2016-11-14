@@ -26,18 +26,6 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
-class Timer:
-    def __init__(self):
-        self.start_time = int(round(time.time() * 1000))
-    
-    def reset(self):
-        self.start_time = int(round(time.time() * 1000))
-    
-    def check_ontime(self):
-        if int(round(time.time() * 1000)) - self.start_time <= 100:
-            return True
-        return False
-
 class Client:
     def __init__(self):
         self.queue = queue.Queue()
@@ -46,7 +34,8 @@ class Client:
         self.queue.put_nowait(v)
 
     def get(self):
-        return self.queue.get()
+        return self.queue.get
+
 
 class World:
     def __init__(self):
@@ -55,7 +44,7 @@ class World:
         self.listeners = list()
         
     def add_set_listener(self, listener):
-        self.listeners.append( listener )
+        self.listeners.append(listener)
 
     def update(self, entity, key, value):
         entry = self.space.get(entity,dict())
@@ -85,8 +74,6 @@ myWorld = World()
 
 clients = []
 
-timer=Timer()
-
 def set_listener(entity,data):
     for client in clients:
         client.put(json.dumps({entity:data}))
@@ -104,7 +91,7 @@ def read_ws(ws,client):
     try:
         while True:
             msg = ws.receive()
-            print "WS RECV: %s" % msg
+            # print "WS RECV: %s" % msg
             if (msg is not None):
                 obj = json.loads(msg)
                 for client in clients:
@@ -148,7 +135,6 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     myWorld.set(entity,flask_post_json())
-    timer.reset()
     return json.dumps(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
