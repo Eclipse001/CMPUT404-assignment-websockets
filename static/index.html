@@ -36,6 +36,8 @@ var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
 
+var time_record = (new Date()).getTime();
+
 function debug(str) {
     var debugDiv = document.getElementById('debug');
     debugDiv.innerHTML = "" + str;
@@ -47,14 +49,29 @@ world = {};
 function drawCircle(context,entity) {
     with(context) {
         beginPath();                
-        lineWidth = 3;
-        var x = entity["x"];
-        var y = entity["y"];
-        //moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+	lineWidth = 4;
+	var x = entity["x"];
+	var y = entity["y"];
+	//moveTo(x,y);
+	if(entity["is_dragger"]===1){
+	    moveTo(x, y-30);
+	    lineTo(x+25, y-7);
+	    lineTo(x+13, y+20);
+	    lineTo(x-13, y+20);
+	    lineTo(x-25, y-7);
+	}
+	else{
+	    moveTo(x, y-60);
+	    lineTo(x+55, y-17);
+	    lineTo(x+33, y+50);
+	    lineTo(x-33, y+50);
+	    lineTo(x-55, y-17);
+	}
+	closePath();
+	           
+	fillStyle = entity["colour"];
+	strokeStyle = fillStyle;
+	stroke();                                         
     }
 }
 
@@ -122,7 +139,7 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
+    // drawNextFrame(); // (but should we?)
     socket.send(JSON.stringify(world));
 }
 var counter = 0;
@@ -234,7 +251,7 @@ mouse.mousedowners.push(function(x,y,clicked,e) {
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'purple'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
@@ -251,7 +268,7 @@ function wsSetup() {
     var url = "ws://"+host+"/subscribe";
     socket = new WebSocket(url);
     socket.onopen = function() {
-	 	  socket.send(JSON.stringify(world));
+	socket.send(JSON.stringify(world));
     };
     
     socket.onerror = function(msg) {
@@ -259,10 +276,10 @@ function wsSetup() {
     };
     socket.onmessage = function(msg){  
         try {
-        		for (var entity in JSON.parse(msg.data)) {
-					world[entity] = JSON.parse(msg.data)[entity];
-	    		}
-            drawNextFrame();    	  
+	    for (var entity in JSON.parse(msg.data)) {
+		world[entity] = JSON.parse(msg.data)[entity];
+	    }
+	    drawNextFrame();  
         } catch (e) {
             alert("socket on message: " + e);
         }

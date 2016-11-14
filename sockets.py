@@ -34,8 +34,7 @@ class Client:
         self.queue.put_nowait(v)
 
     def get(self):
-        return self.queue.get
-
+        return self.queue.get()
 
 class World:
     def __init__(self):
@@ -91,7 +90,7 @@ def read_ws(ws,client):
     try:
         while True:
             msg = ws.receive()
-            # print "WS RECV: %s" % msg
+            print "WS RECV: %s" % msg
             if (msg is not None):
                 obj = json.loads(msg)
                 for client in clients:
